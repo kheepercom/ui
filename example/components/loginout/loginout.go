@@ -1,4 +1,4 @@
-package main
+package loginout
 
 import (
 	"context"
@@ -21,7 +21,15 @@ type Loginout struct {
 	logout *html.Node
 }
 
-func NewLoginout() (*Loginout, error) {
+func Must() *Loginout {
+	c, err := New()
+	if err != nil {
+		panic(err)
+	}
+	return c
+}
+
+func New() (*Loginout, error) {
 	login, err := html.Parse(strings.NewReader(loginHTML))
 	if err != nil {
 		return nil, err
@@ -50,7 +58,7 @@ func UserFromContext(ctx context.Context) string {
 func (l Loginout) Render(r *http.Request, attrs ui.Attributes) (*html.Node, error) {
 	user := UserFromContext(r.Context())
 	if user == "" {
-		return l.login, nil
+		return ui.Clone(l.login), nil
 	}
-	return l.logout, nil
+	return ui.Clone(l.logout), nil
 }

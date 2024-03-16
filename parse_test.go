@@ -40,7 +40,7 @@ func TestParse(t *testing.T) {
 	}
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := Parse(strings.NewReader(test.in))
+			got, err := ParseComponent(strings.NewReader(test.in))
 			if test.wantErr {
 				require.Error(t, err)
 				assert.Nil(t, got)

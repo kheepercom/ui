@@ -10,6 +10,7 @@ func Clone(n *html.Node) *html.Node {
 	}
 	setSiblingRelations(clonedChildren)
 
+	// FirstChild and LastChild are set in adopt
 	clone := &html.Node{
 		Parent:      n.Parent,
 		PrevSibling: n.PrevSibling,
@@ -18,25 +19,9 @@ func Clone(n *html.Node) *html.Node {
 		Data:        n.Data,
 		DataAtom:    n.DataAtom,
 		Attr:        n.Attr,
-		// ignore Namespace
+		Namespace:   n.Namespace,
 	}
-	// adopt sets FirstChild and LastChild
 	adopt(clone, clonedChildren)
 
 	return clone
-}
-
-func getChildren(n *html.Node) []*html.Node {
-	var children []*html.Node
-	if n == nil {
-		return children
-	}
-
-	next := n.FirstChild
-	for next != nil {
-		children = append(children, next)
-		next = next.NextSibling
-	}
-
-	return children
 }

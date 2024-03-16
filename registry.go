@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"bytes"
 	"errors"
 	"fmt"
 	"net/http"
@@ -49,6 +50,8 @@ func (reg Registry) Render(r *http.Request, self *html.Node) (*html.Node, error)
 
 	// If this is a custom component then call its Render method.
 	if component, ok := reg[self.Data]; ok && self.Type == html.ElementNode {
+		println("component")
+		println(self.Data)
 		attrs := Attributes{}
 		for _, a := range self.Attr {
 			if _, ok := attrs[a.Key]; ok {
@@ -78,79 +81,40 @@ func (reg Registry) Render(r *http.Request, self *html.Node) (*html.Node, error)
 	return self, nil
 }
 
-// Find the parent of the node named "children"
-func findParent(self *html.Node) *html.Node {
-	if self.Type == html.ElementNode && self.Data == "children" {
-		return self.Parent
-	}
-	next := self.FirstChild
-	for next != nil {
-		p := findParent(next)
-		if p != nil {
-			return p
+func (reg Registry) CSS() ([]byte, error) {
+	var b bytes.Buffer
+
+	for name, component := range reg {
+		if c, ok := component.(Styled); ok {
+			css, err := c.CSS()
+			if err != nil {
+				return nil, fmt.Errorf("failed to get css for component %q: %w", name, err)
+			}
+			_, err = b.WriteString(css)
+			if err != nil {
+				return nil, err
+			}
 		}
-		next = next.NextSibling
 	}
 
-	return nil
+	return b.Bytes(), nil
 }
 
-// Replace the node named "children" with the actual children
-func placeChildren(parent *html.Node, orphans []*html.Node) {
-	var children []*html.Node
+func (reg Registry) JS() ([]byte, error) {
+	var b bytes.Buffer
 
-	next := parent.FirstChild
-	for next != nil {
-		if next.Type == html.ElementNode && next.Data == "children" {
-			children = append(children, orphans...)
-		} else {
-			children = append(children, next)
+	for name, component := range reg {
+		if c, ok := component.(Scripted); ok {
+			js, err := c.JS()
+			if err != nil {
+				return nil, fmt.Errorf("failed to get js for component %q: %w", name, err)
+			}
+			_, err = b.WriteString(js)
+			if err != nil {
+				return nil, err
+			}
 		}
-		next = next.NextSibling
 	}
 
-	for i, child := range children {
-		child.Parent = parent
-		if i == 0 {
-			parent.FirstChild = child
-			continue
-		}
-		prevSibling := children[i-1]
-		prevSibling.NextSibling = child
-		child.PrevSibling = prevSibling
-	}
-	if len(children) > 0 {
-		parent.LastChild = children[len(children)-1]
-	}
-}
-
-func adopt(parent *html.Node, children []*html.Node) {
-	if parent == nil {
-		return
-	}
-	if len(children) == 0 {
-		parent.FirstChild = nil
-		parent.LastChild = nil
-		return
-	}
-	parent.FirstChild = children[0]
-	parent.LastChild = children[len(children)-1]
-
-	for _, child := range children {
-		child.Parent = parent
-	}
-}
-
-func setSiblingRelations(nodes []*html.Node) {
-	for i, node := range nodes {
-		node.PrevSibling = nil
-		node.NextSibling = nil
-
-		if i == 0 {
-			continue
-		}
-
-		nodes[i-1].NextSibling = node
-		node.PrevSibling = nodes[i-1]
-	}
+	return b.Bytes(), nil
 }
