@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"embed"
 	"net/http"
 
 	"golang.org/x/net/html"
@@ -20,4 +21,11 @@ type Styled interface {
 // be added to the app's JS bundle served with every page.
 type Scripted interface {
 	JS() (string, error)
+}
+
+// Examples is an optional component interface used to add variants of the
+// component to the catalog. It is also used to ensure that all classes the
+// component makes use of are included in the Tailwind release build.
+type Examples interface {
+	Examples() embed.FS
 }

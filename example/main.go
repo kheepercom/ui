@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/kheepercom/ui"
+	"github.com/kheepercom/ui/components/neobrutal/button"
 	"github.com/kheepercom/ui/example/components/loginout"
 )
 
@@ -16,8 +17,11 @@ func main() {
 	reg := ui.Registry{}
 
 	reg.Add("loginout", loginout.Must())
+	reg.Add("NeoBrutalButton", &button.Button{})
 
-	mux := ui.Must(reg, appfs, ui.Options{})
+	mux := ui.Must(reg, appfs, ui.Options{
+		CatalogPath: "/catalog",
+	})
 
 	http.ListenAndServe(":8888", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if rand.Intn(2) == 1 {

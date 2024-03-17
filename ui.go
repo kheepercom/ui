@@ -17,8 +17,12 @@ type Options struct {
 	PagesRoot string
 	// Serve all files under this directory unmodified
 	PublicRoot string
+
 	// Logger to use for messages and errors
 	Logger *slog.Logger
+
+	// Serve a component catalog at this path
+	CatalogPath string
 }
 
 func Must(reg Registry, uifs fs.FS, opts Options) *http.ServeMux {
@@ -110,6 +114,16 @@ func New(reg Registry, uifs fs.FS, opts Options) (*http.ServeMux, error) {
 	})
 	if err != nil {
 		return nil, err
+	}
+
+	if opts.CatalogPath != "" {
+		err := catalog(reg, mux, CatalogOptions{
+			Prefix: opts.CatalogPath,
+			Logger: logger,
+		})
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return mux, nil

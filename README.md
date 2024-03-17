@@ -18,3 +18,12 @@ Additionally, a Link preload header is emitted in the response for every page to
 ## Recipes
 
 ### Add 
+
+## Tailwind
+
+All components may use [Tailwind](https://tailwindcss.com/) classes.
+In development the [Tailwind browser library](https://tailwindcss.com/docs/installation/play-cdn) provides support for all classes.
+
+> [!Important]
+> If a component requires a Tailwind class then it must implement the Examples interface and use the class at least once in an example.
+> The optimized release CSS will only include Tailwind classes that appear in an example.

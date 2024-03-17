@@ -50,8 +50,6 @@ func (reg Registry) Render(r *http.Request, self *html.Node) (*html.Node, error)
 
 	// If this is a custom component then call its Render method.
 	if component, ok := reg[self.Data]; ok && self.Type == html.ElementNode {
-		println("component")
-		println(self.Data)
 		attrs := Attributes{}
 		for _, a := range self.Attr {
 			if _, ok := attrs[a.Key]; ok {
