@@ -27,3 +27,7 @@ In development the [Tailwind browser library](https://tailwindcss.com/docs/insta
 > [!Important]
 > If a component requires a Tailwind class then it must implement the Examples interface and use the class at least once in an example.
 > The optimized release CSS will only include Tailwind classes that appear in an example.
+
+## Recommended Workflow
+
+Use [air](https://github.com/cosmtrek/air?tab=readme-ov-file) to watch and rebuild your project on any changes.

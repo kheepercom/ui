@@ -1,0 +1,29 @@
+<div
+	class="w-full max-w-2xl h-full md:h-[480px] 2xl:h-[600px] border-black border-2 rounded-md hover:shadow-[8px_8px_0px_rgba(0,0,0,1)] bg-white">
+	<a href={{ .Get "call_to_action_link" }}>
+		<article class="w-full h-full">
+			<figure class="w-full border-black border-b-2">
+				<img src={{ .Get "thumbnail" }} alt="thumbnail" class="w-full h-full object-cover" />
+			</figure>
+			<div class="px-6 py-5 text-left h-full">
+				{{ with .Get "date" }}
+				<p class="text-base mb-4">{{ . }}</p>
+				{{ end }}
+
+				{{ with .Get "title" }}
+				<h1 class="text-[32px] leading-8 font-bold mb-4">{{ . }}</h1>
+				{{ end }}
+
+				{{ with .Get "description" }}
+				<p class="text-xs mb-4 line-clamp-2 lg:line-clamp-4">
+					{{ . }}
+				</p>
+				{{ end }}
+
+				{{ with .Get "call_to_action_text" }}
+				<strong>{{ . }}</strong>}
+				{{ end }}
+			</div>
+		</article>
+	</a>
+</div>

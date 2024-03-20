@@ -37,13 +37,13 @@ func (b *Button) Render(_ *http.Request, attrs ui.Attributes) (*html.Node, error
 			attrs.Get("color") == "lime" && !attrs.Has("disabled"),
 		},
 		{
-			"bg-cyan-200 hover:bg-cyan-300 active:bg-cyan-400", attrs.Get("color") == "cyan" && !attrs.Has("disabled"),
+			"bg-cyan-200 hover:bg-cyan-300 active:bg-cyan-400", (attrs.Get("color") == "cyan" || !attrs.Has("color")) && !attrs.Has("disabled"),
 		},
-		{"rounded-none", attrs.Get("rounded") == "none"},
+		{"rounded-none", attrs.Get("rounded") == "none" || !attrs.Has("rounded")},
 		{"rounded-md", attrs.Get("rounded") == "md"},
 		{"rounded-full", attrs.Get("rounded") == "full"},
 		{"h-10 px-4 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)]", attrs.Get("size") == "sm"},
-		{"h-12 px-5 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)]", attrs.Get("size") == "md"},
+		{"h-12 px-5 hover:shadow-[2px_2px_0px_rgba(0,0,0,1)]", attrs.Get("size") == "md" || !attrs.Has("size")},
 		{"h-14 px-5 hover:shadow-[4px_4px_0px_rgba(0,0,0,1)]", attrs.Get("size") == "lg"},
 		{
 			"border-[#727272] bg-[#D4D4D4] text-[#676767] hover:bg-[#D4D4D4] hover:shadow-none active:bg-[#D4D4D4]",

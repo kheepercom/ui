@@ -25,6 +25,16 @@ type catalogPageData struct {
 	Example string
 }
 
+type Link struct {
+	Href string
+	Text string
+}
+
+type menuPageData struct {
+	Title string
+	Links []Link
+}
+
 const catalogPage = `
 <!doctype html>
 <head>
@@ -32,13 +42,30 @@ const catalogPage = `
 	<title>{{ .Title }}</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
 	<script src="https://cdn.tailwindcss.com/3.4.1"></script>
+	<script>fetch("/reload").catch(() => setTimeout(() => { location.reload(); }, 1000))</script>
 </head>
 <body>
 	{{ .Example }}
-</body>
-`
+</body>`
 
-var catalogTmpl = template.Must(template.New("catalog").Parse(catalogPage))
+const menuPage = `
+<!doctype html>
+<head>
+	<meta charset="UTF-8">
+	<title>{{ .Title }}</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<script>fetch("/reload").catch(() => setTimeout(() => { location.reload(); }, 1000))</script>
+</head>
+<body>
+	{{ range .Links }}
+	<p><a href={{ .Href }}>{{ .Text }}</a></p>
+	{{ end }}
+</body>`
+
+var (
+	catalogTmpl = template.Must(template.New("catalog").Parse(catalogPage))
+	menuTmpl    = template.Must(template.New("menu").Parse(menuPage))
+)
 
 // TODO return a mux
 func catalog(reg Registry, mux *http.ServeMux, opts CatalogOptions) error {
@@ -53,6 +80,8 @@ func catalog(reg Registry, mux *http.ServeMux, opts CatalogOptions) error {
 		prefix = "/catalog"
 	}
 
+	var componentLinks []Link
+
 	for name, component := range reg {
 		c, ok := component.(Examples)
 		if !ok {
@@ -60,6 +89,8 @@ func catalog(reg Registry, mux *http.ServeMux, opts CatalogOptions) error {
 		}
 
 		examplesFS := c.Examples()
+
+		var variantLinks []Link
 
 		err := fs.WalkDir(examplesFS, "examples", func(filename string, f fs.DirEntry, err error) error {
 			if f == nil {
@@ -94,6 +125,11 @@ func catalog(reg Registry, mux *http.ServeMux, opts CatalogOptions) error {
 				return err
 			}
 
+			variantLinks = append(variantLinks, Link{
+				Href: pattern,
+				Text: variant,
+			})
+
 			mux.HandleFunc("GET "+pattern, func(w http.ResponseWriter, r *http.Request) {
 				c, err := reg.Render(r, Clone(parsedCatalogPage))
 				if err != nil {
@@ -108,9 +144,38 @@ func catalog(reg Registry, mux *http.ServeMux, opts CatalogOptions) error {
 			})
 			return nil
 		})
+		if err != nil {
+			return err
+		}
 
-		return err
+		data := &menuPageData{
+			Title: name + " Examples",
+			Links: variantLinks,
+		}
+
+		mux.HandleFunc("GET "+path.Join(prefix, name)+"/", func(w http.ResponseWriter, r *http.Request) {
+			err := menuTmpl.Execute(w, data)
+			if err != nil {
+				log.Error(err.Error())
+			}
+		})
+
+		componentLinks = append(componentLinks, Link{
+			Href: path.Join(prefix, name),
+			Text: name,
+		})
 	}
+
+	data := menuPageData{
+		Title: "Component Catalog",
+		Links: componentLinks,
+	}
+	mux.HandleFunc("GET "+prefix+"/", func(w http.ResponseWriter, r *http.Request) {
+		err := menuTmpl.Execute(w, data)
+		if err != nil {
+			log.Error(err.Error())
+		}
+	})
 
 	return nil
 }

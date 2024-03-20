@@ -11,6 +11,15 @@ func (a Attributes) Get(key string) string {
 	return a[key][len(a[key])-1]
 }
 
+// GetOr returns the attribute value if set, otherwise returns the default from the 2nd argument.
+func (a Attributes) GetOr(key, def string) string {
+	v, ok := a.GetHas(key)
+	if ok {
+		return v
+	}
+	return def
+}
+
 // GetHas returns the last value associated with the given key.
 func (a Attributes) GetHas(key string) (string, bool) {
 	l := len(a[key])

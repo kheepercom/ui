@@ -2,11 +2,14 @@ package main
 
 import (
 	"embed"
+	"log/slog"
 	"math/rand"
 	"net/http"
 
 	"github.com/kheepercom/ui"
 	"github.com/kheepercom/ui/components/neobrutal/button"
+	"github.com/kheepercom/ui/components/neobrutal/card"
+	"github.com/kheepercom/ui/components/neobrutal/checkbox"
 	"github.com/kheepercom/ui/example/components/loginout"
 )
 
@@ -15,9 +18,12 @@ var appfs embed.FS
 
 func main() {
 	reg := ui.Registry{}
+	logger := slog.Default()
 
 	reg.Add("loginout", loginout.Must())
 	reg.Add("NeoBrutalButton", &button.Button{})
+	reg.Add("NeoBrutalCard", card.New(logger))
+	reg.Add("NeoBrutalCheckbox", &checkbox.Checkbox{})
 
 	mux := ui.Must(reg, appfs, ui.Options{
 		CatalogPath: "/catalog",

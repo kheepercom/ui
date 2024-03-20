@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"path"
 	"strings"
+	"time"
 
 	"golang.org/x/net/html"
 )
@@ -23,6 +24,9 @@ type Options struct {
 
 	// Serve a component catalog at this path
 	CatalogPath string
+
+	// Reload browser when air restarts the app.
+	LiveReload bool
 }
 
 func Must(reg Registry, uifs fs.FS, opts Options) *http.ServeMux {
@@ -124,6 +128,12 @@ func New(reg Registry, uifs fs.FS, opts Options) (*http.ServeMux, error) {
 		if err != nil {
 			return nil, err
 		}
+	}
+
+	if opts.LiveReload || opts.CatalogPath != "" {
+		mux.HandleFunc("GET /reload", func(w http.ResponseWriter, r *http.Request) {
+			time.Sleep(time.Hour * 24)
+		})
 	}
 
 	return mux, nil
