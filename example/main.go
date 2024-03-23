@@ -11,6 +11,7 @@ import (
 	"github.com/kheepercom/ui/components/neobrutal/card"
 	"github.com/kheepercom/ui/components/neobrutal/checkbox"
 	"github.com/kheepercom/ui/components/neobrutal/dialog"
+	"github.com/kheepercom/ui/components/neobrutal/dropdown"
 	"github.com/kheepercom/ui/example/components/loginout"
 )
 
@@ -26,6 +27,8 @@ func main() {
 	reg.Add("NeoBrutalCard", card.New(logger))
 	reg.Add("NeoBrutalCheckbox", &checkbox.Checkbox{})
 	reg.Add("NeoBrutalDialog", dialog.New(logger))
+	reg.Add("NeoBrutalDropdown", dropdown.New(logger))
+	reg.Add("NeoBrutalDropdownItem", &dropdown.Item{})
 
 	mux := ui.Must(reg, appfs, ui.Options{
 		CatalogPath: "/catalog",
