@@ -1,0 +1,15 @@
+<div class="flex items-center mb-4 gap-2">
+	<li
+		class={{ .Get "_class" }}
+
+		{{ with .Get "onclick" }}
+			onclick={{ . }}
+		{{ end }}
+	>
+		<a href={{ .Get "href" }}>{{ .Get "text" }}</a>
+	</li>
+
+	{{ if .Get "new" }}
+	<span class="text-xs bg-violet-200 px-2 py-1 rounded">New</span>
+	{{ end }}
+</div>
