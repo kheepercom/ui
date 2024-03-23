@@ -35,3 +35,7 @@ func (a Attributes) Has(key string) bool {
 
 	return ok
 }
+
+func (a Attributes) Set(key string, val string) {
+	a[key] = []string{val}
+}

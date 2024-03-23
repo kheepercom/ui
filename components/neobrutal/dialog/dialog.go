@@ -29,16 +29,20 @@ func New(logger *slog.Logger) *Dialog {
 	}
 }
 
+const width = "_width_class"
+
 func (d *Dialog) Render(r *http.Request, attrs ui.Attributes) (*html.Node, error) {
 	switch attrs.Get("width") {
 	case "fit":
-		attrs["_width_class"] = []string{"w-fit"}
+		attrs.Set(width, "w-fit")
 	case "full":
-		attrs["_width_class"] = []string{"w-full"}
+		attrs.Set(width, "w-full")
 	case "1/2":
-		attrs["_width_class"] = []string{"w-1/2"}
+		attrs.Set(width, "w-1/2")
 	case "1/3":
-		attrs["_width_class"] = []string{"w-1/3"}
+		attrs.Set(width, "w-1/3")
+	default:
+		attrs.Set(width, "w-72")
 	}
 
 	b := &bytes.Buffer{}
