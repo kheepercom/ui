@@ -31,6 +31,8 @@ func (*Checkbox) Render(_ *http.Request, attrs ui.Attributes) (*html.Node, error
 		{"[&:not(:checked)]:after:opacity-0", true},
 		{"after:checked:opacity-1 before:checked:bg-[#FF965B]", true},
 		{colors[attrs.GetOr("color", "orange")], true},
+		// Custom classes set on the component
+		{attrs.Get("class"), true},
 	}
 
 	a := []html.Attribute{
