@@ -41,11 +41,12 @@ const catalogPage = `
 	<meta charset="UTF-8">
 	<title>{{ .Title }}</title>
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<script src="https://cdn.tailwindcss.com/3.4.1"></script>
-	<script>fetch("/reload").catch(() => setTimeout(() => { location.reload(); }, 1000))</script>
 </head>
 <body>
 	{{ .Example }}
+	<script src="https://cdn.tailwindcss.com/3.4.1"></script>
+	<script>fetch("/reload").catch(() => setTimeout(() => { location.reload(); }, 1000))</script>
+	<script src="/js/components.js"></script>
 </body>`
 
 const menuPage = `

@@ -5,7 +5,7 @@
 			class={{ .Get "_button_class" }}
 			aria-expanded="true"
 			aria-haspopup="true"
-			onClick=neo_brutal_dropdown_toggle
+			onclick=neo_brutal_dropdown_toggle({{ .Get "_menu_id" }})
 		>
 			{{ .Get "title" }}
 			<svg class="mt-1 h-5 w-5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
@@ -18,10 +18,11 @@
 	</div>
 
 	<div
-		class="w-72 absolute right-0 z-10 mt-2 w-56 origin-top-right bg-white focus:outline-none shadow-[2px_2px_0px_rgba(0,0,0,1)] border-black border-2 divide-y divide-black"
+		class="w-72 absolute right-0 z-10 mt-2 w-56 origin-top-right bg-white focus:outline-none shadow-[2px_2px_0px_rgba(0,0,0,1)] border-black border-2 divide-y divide-black hidden"
 		role="menu"
 		aria-orientation="vertical"
 		aria-labelledby="menu-button"
+		id={{ .Get "_menu_id" }}
 	>
 		<div role="none">
 			<children></children>

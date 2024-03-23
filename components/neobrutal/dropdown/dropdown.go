@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/google/uuid"
 	"github.com/kheepercom/ui"
 	"golang.org/x/net/html"
 )
@@ -15,6 +16,9 @@ import (
 //go:embed dropdown.html
 var dropdownHTML string
 var dropdownTmpl = template.Must(template.New("dropdown").Parse(dropdownHTML))
+
+//go:embed dropdown.js
+var dropdownJS string
 
 type Dropdown struct {
 	log *slog.Logger
@@ -47,10 +51,16 @@ func (d *Dropdown) Render(r *http.Request, attrs ui.Attributes) (*html.Node, err
 	}
 	attrs.Set("_button_class", classes.String())
 
+	attrs.Set("_menu_id", uuid.NewString())
+
 	b := &bytes.Buffer{}
 	if err := dropdownTmpl.Execute(b, attrs); err != nil {
 		return nil, fmt.Errorf("execute dropdown template: %w", err)
 	}
 
 	return ui.ParseComponent(b)
+}
+
+func (d *Dropdown) JS() (string, error) {
+	return dropdownJS, nil
 }

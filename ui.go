@@ -136,5 +136,17 @@ func New(reg Registry, uifs fs.FS, opts Options) (*http.ServeMux, error) {
 		})
 	}
 
+	js, err := reg.JS()
+	if err != nil {
+		return nil, err
+	}
+	mux.HandleFunc("GET /js/components.js", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "text/javascript")
+		if _, err := w.Write(js); err != nil {
+			logger.Info("Failed to serve JS", "error", err)
+			return
+		}
+	})
+
 	return mux, nil
 }
