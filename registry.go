@@ -69,7 +69,9 @@ func (reg Registry) Render(r *http.Request, self *html.Node) (*html.Node, error)
 			placeChildren(parent, renderedChildren)
 		}
 
-		return renderedComponentNode, nil
+		// rendredComponentNode may have component descendents that require rendering
+		// or it may itself be another component
+		return reg.Render(r, renderedComponentNode)
 	}
 
 	// Not a component. Adopt the rendered children directly.
