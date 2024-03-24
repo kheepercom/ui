@@ -14,6 +14,9 @@ import (
 )
 
 type Options struct {
+	// The UI server will be mounted at this point
+	Prefix string
+
 	// Render and serve all files under this directory
 	PagesRoot string
 	// Serve all files under this directory unmodified
@@ -122,7 +125,7 @@ func New(reg Registry, uifs fs.FS, opts Options) (*http.ServeMux, error) {
 
 	if opts.CatalogPath != "" {
 		err := catalog(reg, mux, CatalogOptions{
-			Prefix: opts.CatalogPath,
+			Prefix: path.Join(opts.Prefix, opts.CatalogPath),
 			Logger: logger,
 		})
 		if err != nil {
@@ -130,7 +133,7 @@ func New(reg Registry, uifs fs.FS, opts Options) (*http.ServeMux, error) {
 		}
 	}
 
-	if opts.LiveReload || opts.CatalogPath != "" {
+	if opts.LiveReload {
 		mux.HandleFunc("GET /reload", func(w http.ResponseWriter, r *http.Request) {
 			time.Sleep(time.Hour * 24)
 		})

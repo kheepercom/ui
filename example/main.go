@@ -3,7 +3,6 @@ package main
 import (
 	"embed"
 	"log/slog"
-	"math/rand"
 	"net/http"
 
 	"github.com/kheepercom/ui"
@@ -14,7 +13,6 @@ import (
 	"github.com/kheepercom/ui/components/neobrutal/dropdown"
 	"github.com/kheepercom/ui/components/neobrutal/leftsidebar"
 	"github.com/kheepercom/ui/components/neobrutal/menu"
-	"github.com/kheepercom/ui/example/components/loginout"
 )
 
 //go:embed pages public
@@ -24,7 +22,6 @@ func main() {
 	reg := ui.Registry{}
 	logger := slog.Default()
 
-	reg.Add("loginout", loginout.Must())
 	reg.Add("NeoBrutalButton", &button.Button{})
 	reg.Add("NeoBrutalCard", card.New(logger))
 	reg.Add("NeoBrutalCheckbox", &checkbox.Checkbox{})
@@ -37,13 +34,13 @@ func main() {
 
 	mux := ui.Must(reg, appfs, ui.Options{
 		CatalogPath: "/catalog",
+		LiveReload:  true,
+	})
+	mux.HandleFunc("GET /um", func(w http.ResponseWriter, r *http.Request) {
+		w.Write([]byte("um"))
 	})
 
-	http.ListenAndServe(":8888", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if rand.Intn(2) == 1 {
-			ctx := loginout.WithUser(r.Context(), "j_smith")
-			r = r.WithContext(ctx)
-		}
-		mux.ServeHTTP(w, r)
-	}))
+	root := http.NewServeMux()
+	root.Handle("/neobrutal/", http.StripPrefix("/neobrutal", mux))
+	http.ListenAndServe(":8888", root)
 }

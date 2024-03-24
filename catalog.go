@@ -15,24 +15,20 @@ import (
 )
 
 type CatalogOptions struct {
-	// default is "/catalog"
+	// Prefix is the path where the UI server is mounted if other than the root
+	// path.
 	Prefix string
+	// Path is the path where the catalog is served. Do not include the Prefix.
+	// Default is "/catalog".
+	Path   string
 	Logger *slog.Logger
 }
 
+// catalog page is the template used to render a single component example
 type catalogPageData struct {
 	Title   string
 	Example string
-}
-
-type Link struct {
-	Href string
-	Text string
-}
-
-type menuPageData struct {
-	Title string
-	Links []Link
+	Prefix  string
 }
 
 const catalogPage = `
@@ -46,8 +42,19 @@ const catalogPage = `
 	{{ .Example }}
 	<script src="https://cdn.tailwindcss.com/3.4.1"></script>
 	<script>fetch("/reload").catch(() => setTimeout(() => { location.reload(); }, 1000))</script>
-	<script src="/js/components.js"></script>
+	<script src="{{ .Prefix }}/js/components.js"></script>
 </body>`
+
+// menu page is the template used to render links to multiple components or examples
+type link struct {
+	Href string
+	Text string
+}
+
+type menuPageData struct {
+	Title string
+	links []link
+}
 
 const menuPage = `
 <!doctype html>
@@ -58,7 +65,7 @@ const menuPage = `
 	<script>fetch("/reload").catch(() => setTimeout(() => { location.reload(); }, 1000))</script>
 </head>
 <body>
-	{{ range .Links }}
+	{{ range .links }}
 	<p><a href={{ .Href }}>{{ .Text }}</a></p>
 	{{ end }}
 </body>`
@@ -70,19 +77,21 @@ var (
 
 // TODO return a mux
 func catalog(reg Registry, mux *http.ServeMux, opts CatalogOptions) error {
-	const htmlExt = ".html"
-
 	log := opts.Logger
 	if log == nil {
 		log = slog.Default()
 	}
-	prefix := opts.Prefix
-	if prefix == "" {
-		prefix = "/catalog"
+
+	if opts.Path == "" {
+		opts.Path = "/catalog"
 	}
+	base := path.Join(opts.Prefix, opts.Path)
 
-	var componentLinks []Link
+	var componentlinks []link
 
+	// Iterate over all components in the registry to see if they have any examples.
+	// Components provide examples by implementing the Examples method returning an
+	// embed.FS.
 	for name, component := range reg {
 		c, ok := component.(Examples)
 		if !ok {
@@ -91,10 +100,13 @@ func catalog(reg Registry, mux *http.ServeMux, opts CatalogOptions) error {
 
 		examplesFS := c.Examples()
 
-		var variantLinks []Link
+		// Links to every component example page. Used to construct a menu page.
+		var exampleLinks []link
 
+		// Add a handler for every example file the component provides.
 		err := fs.WalkDir(examplesFS, "examples", func(filename string, f fs.DirEntry, err error) error {
 			if f == nil {
+				// If you do `var examples embed.FS` with no embed directive you'll get this error.
 				return fmt.Errorf("got nil file walking examples FS for component %s, possibily caused by an empty embed.FS")
 			}
 			if f.IsDir() {
@@ -104,9 +116,10 @@ func catalog(reg Registry, mux *http.ServeMux, opts CatalogOptions) error {
 				return nil
 			}
 
-			variant := strings.TrimSuffix(filepath.Base(filename), ".html")
+			// used as the link text on the menu page
+			exampleName := strings.TrimSuffix(filepath.Base(filename), ".html")
 
-			pattern := path.Join(prefix, name, variant)
+			pattern := path.Join(base, name, exampleName)
 
 			exampleHTML, err := examplesFS.ReadFile(filename)
 			if err != nil {
@@ -114,25 +127,25 @@ func catalog(reg Registry, mux *http.ServeMux, opts CatalogOptions) error {
 			}
 
 			data := &catalogPageData{
-				Title:   fmt.Sprintf("%s: %s", name, variant),
+				Title:   fmt.Sprintf("%s: %s", name, exampleName),
 				Example: string(exampleHTML),
 			}
-			fullCatalogPage := &bytes.Buffer{}
-			if err := catalogTmpl.Execute(fullCatalogPage, data); err != nil {
-				return err
+			fullExamplePage := &bytes.Buffer{}
+			if err := catalogTmpl.Execute(fullExamplePage, data); err != nil {
+				return fmt.Errorf("catalog failed to render example page for %s %s: %w", name, exampleName, err)
 			}
-			parsedCatalogPage, err := ParsePage(fullCatalogPage)
+			parsedExamplePage, err := ParsePage(fullExamplePage)
 			if err != nil {
-				return err
+				return fmt.Errorf("catalog failed to parse example page for %s %s: %w", name, exampleName, err)
 			}
 
-			variantLinks = append(variantLinks, Link{
+			exampleLinks = append(exampleLinks, link{
 				Href: pattern,
-				Text: variant,
+				Text: exampleName,
 			})
 
 			mux.HandleFunc("GET "+pattern, func(w http.ResponseWriter, r *http.Request) {
-				c, err := reg.Render(r, Clone(parsedCatalogPage))
+				c, err := reg.Render(r, Clone(parsedExamplePage))
 				if err != nil {
 					http.Error(w, "Internal Server Error", 500)
 					log.Error(err.Error())
@@ -149,29 +162,31 @@ func catalog(reg Registry, mux *http.ServeMux, opts CatalogOptions) error {
 			return err
 		}
 
-		data := &menuPageData{
-			Title: name + " Examples",
-			Links: variantLinks,
-		}
-
-		mux.HandleFunc("GET "+path.Join(prefix, name)+"/", func(w http.ResponseWriter, r *http.Request) {
+		// component menu page with links to all component examples
+		exampleMenuPath := path.Join(base, name, "/")
+		mux.HandleFunc("GET "+exampleMenuPath, func(w http.ResponseWriter, r *http.Request) {
+			data := &menuPageData{
+				Title: name + " Examples",
+				links: exampleLinks,
+			}
 			err := menuTmpl.Execute(w, data)
 			if err != nil {
 				log.Error(err.Error())
 			}
 		})
 
-		componentLinks = append(componentLinks, Link{
-			Href: path.Join(prefix, name),
+		componentlinks = append(componentlinks, link{
+			Href: path.Join(base, name),
 			Text: name,
 		})
 	}
 
-	data := menuPageData{
-		Title: "Component Catalog",
-		Links: componentLinks,
-	}
-	mux.HandleFunc("GET "+prefix+"/", func(w http.ResponseWriter, r *http.Request) {
+	// catalog menu page with links to all components
+	mux.HandleFunc("GET "+base+"/", func(w http.ResponseWriter, r *http.Request) {
+		data := menuPageData{
+			Title: "Component Catalog",
+			links: componentlinks,
+		}
 		err := menuTmpl.Execute(w, data)
 		if err != nil {
 			log.Error(err.Error())
